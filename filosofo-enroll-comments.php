@@ -3,7 +3,7 @@
 Plugin Name: Filosofo Enroll Comments
 Plugin URI: http://www.ilfilosofo.com/blog/enroll-comments/
 Description: Filosofo Enroll Comments lets users sign up to receive emails when new comments appear.    
-Version: 0.5
+Version: 0.51
 Author: Austin Matzko
 Author URI: http://www.ilfilosofo.com/blog/
 */
@@ -284,7 +284,7 @@ $this->default_role = 'subscriber';
 		'view'		=> '',
 		'unsubscribe'	=> '');
 		?><div class="wrap"><h2><?php _e('Manage Comment Subscriptions'); ?></h2><?php echo $user_dropdown; ?>
-		<h4><? echo sprintf(__('%s is enrolled to be emailed comments from the following posts and pages:'),$user->user_login); ?></h4>
+		<h4><?php echo sprintf(__('%s is enrolled to be emailed comments from the following posts and pages:'),$user->user_login); ?></h4>
 		<table id="the-list-x" width="100%" cellpadding="3" cellspacing="3"><tr>
 		<?php foreach($posts_columns as $column_display_name) { ?>
 		<th scope="col"><?php echo $column_display_name; ?></th>
@@ -341,6 +341,15 @@ $this->default_role = 'subscriber';
 
 } //end class filosofo_ec
 $filosofo_ec_class = new filosofo_ec();
+
+function filosofo_ec_user_is_enrolled( $user_id = '', $post_id = '' ) {
+global $post, $user_ID, $filosofo_ec_class;
+	$post_id = (int) $post_id; $user_id = (int) $user_id;
+	if (0 == $post_id) $post_id = $post->ID;  
+	if (0 == $user_id) $user_id = $user_ID;
+$enrollees = (array) $filosofo_ec_class->get_post_enrollees($post_id);
+return in_array( $user_id , $enrollees );
+}
 
 add_action('comment_form', array(&$filosofo_ec_class,'add_enroll_checkbox'),1);
 add_action('comment_post', array(&$filosofo_ec_class,'new_comment_posted'),50);
