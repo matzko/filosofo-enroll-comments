@@ -3,7 +3,7 @@
 Plugin Name: Filosofo Enroll Comments
 Plugin URI: http://www.ilfilosofo.com/blog/enroll-comments/
 Description: Filosofo Enroll Comments lets users sign up to receive emails when new comments appear.    
-Version: 0.51
+Version: 0.52
 Author: Austin Matzko
 Author URI: http://www.ilfilosofo.com/blog/
 */
@@ -72,7 +72,7 @@ $this->default_role = 'subscriber';
 				$user_ID = $this->create_user();		
 
 		}
-		$comment_data = get_commentdata($comment_ID,1);
+		$comment_data = get_commentdata($comment_ID,1,true);
 		$comment_post_ID = $comment_data['comment_post_ID'];
 		$this->add_enrollment($comment_post_ID,$user_ID);
 	}
@@ -264,6 +264,30 @@ $this->default_role = 'subscriber';
 			ajaxDel.runAJAX('<?php echo '&filosofo_ec_user_id=' . $user->ID . '&check=' . $this->encode_user_id($user->ID); ?>&filosofo_ec_subscribe=unsubscribe&filosofo_ec_post_id=' + id);
 			return false;
 		}
+		function removeThisItem(id) {
+			var response = ajaxDel.response;
+			if ( isNaN(response) ) {
+				var thelink; var thepath;
+				if (document.getElementById('link-' + id)) {
+					thelink = document.getElementById('link-' + id); 
+					thepath = thelink.getAttribute('href'); 
+				}
+				else { thepath = window.location; }
+				location.href = thepath;
+				return;
+			}
+			response = parseInt(response, 10);
+			if ( 1 == response ) {
+				theItem = document.getElementById(id);
+				Fat.fade_element(id,null,700,'#FF3333');
+				setTimeout('theItem.parentNode.removeChild(theItem)', 705);
+				var pos = getListPos(id);
+				listItems.splice(pos,1);
+				recolorList(pos);
+				ajaxDel.myResponseElement.parentNode.removeChild(ajaxDel.myResponseElement);
+			}
+		}
+
 		function submitIt(selection) {
 			var the_selection = document.getElementById(selection);
 			location.href = '<?php echo $_SERVER['PHP_SELF'] . '?page=' . basename(__FILE__) . '&enrolled_user='; ?>' + the_selection.value;
@@ -302,7 +326,7 @@ $this->default_role = 'subscriber';
 					<?php break;
 					case 'view': ?><td><a href="<?php echo get_permalink($post_id); ?>" rel="permalink" class="edit"><?php _e('View Post'); ?></a></td>
 					<?php break;
-					case 'unsubscribe': ?><td><a href="<?php echo $_SERVER['PHP_SELF']; ?>?page=<?php echo basename(__FILE__) . '&amp;filosofo_ec_user_id=' . $user->ID . '&amp;check=' . $this->encode_user_id($user->ID) . '&amp;filosofo_ec_post_id=' . $post_id . '&amp;filosofo_ec_subscribe=unsubscribe'; ?>" rel="permalink" class="delete" <?php echo "onclick=\"return deleteSomething( 'enroll', " . $post_id . ", '" . sprintf(__("You are about to unsubscribe from this post &quot;%s&quot;.\\n&quot;OK&quot; to unsubscribe, &quot;Cancel&quot; to stop."), str_replace("&#039;","&rsquo;",wp_specialchars(get_the_title($post_id), 1) )) . "' );\""; 
+					case 'unsubscribe': ?><td><a href="<?php echo $_SERVER['PHP_SELF']; ?>?page=<?php echo basename(__FILE__) . '&amp;filosofo_ec_user_id=' . $user->ID . '&amp;check=' . $this->encode_user_id($user->ID) . '&amp;filosofo_ec_post_id=' . $post_id . '&amp;filosofo_ec_subscribe=unsubscribe'; ?>" rel="permalink" id="link-enroll-<?php echo $post_id; ?>" class="delete" <?php echo "onclick=\"return deleteSomething( 'enroll', " . $post_id . ", '" . sprintf(__("You are about to unsubscribe from this post &quot;%s&quot;.\\n&quot;OK&quot; to unsubscribe, &quot;Cancel&quot; to stop."), str_replace("&#039;","&rsquo;",wp_specialchars(get_the_title($post_id), 1) )) . "' );\""; 
 					?>><?php _e('Unsubscribe'); ?></a></td>
 					<?php break;
 				}
@@ -338,7 +362,6 @@ $this->default_role = 'subscriber';
 		</div>
 		<?php		
 	} //end function user_subscription_page
-
 } //end class filosofo_ec
 $filosofo_ec_class = new filosofo_ec();
 
@@ -356,4 +379,5 @@ add_action('comment_post', array(&$filosofo_ec_class,'new_comment_posted'),50);
 add_action('activate_' . basename(__FILE__), array(&$filosofo_ec_class,'activate_plugin'));
 add_action('admin_menu', array(&$filosofo_ec_class, 'add_admin_menu'));
 add_action('plugins_loaded', array(&$filosofo_ec_class, 'test_for_posts'));
+add_action('wp_set_comment_status', array(&$filosofo_ec_class,'email_enrollees'));
 ?>
