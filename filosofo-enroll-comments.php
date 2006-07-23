@@ -3,7 +3,7 @@
 Plugin Name: Filosofo Enroll Comments
 Plugin URI: http://www.ilfilosofo.com/blog/enroll-comments/
 Description: Filosofo Enroll Comments lets users sign up to receive emails when new comments appear.    
-Version: 0.52
+Version: 0.53
 Author: Austin Matzko
 Author URI: http://www.ilfilosofo.com/blog/
 */
@@ -34,6 +34,7 @@ function filosofo_ec() {
 /* 	The messages that appear in the comments area, if appropriate */
 $this->checkbox_label = __('Receive an email if someone else comments on this post?');
 $this->manage_label = __('Manage <a href="%s">your subscriptions</a>.');
+$this->no_comment_subscribe = __('<p><a href="%s">Subscribe</a> without commenting.</p>');
 
 /* 	The capability a user needs to be able to edit others' enrollments */
 $this->min_role = 'edit_others_posts';
@@ -54,8 +55,18 @@ $this->default_role = 'subscriber';
 	}
 
 	function add_enroll_checkbox($post_ID) {
+		global $user_ID;
 		$notice = ($this->check_status($post_ID)) ? '<p>' . sprintf($this->manage_label, get_settings('siteurl') . '/wp-admin/profile.php?page=' . basename(__FILE__)) . '</p>' 
 		: '<label for="filosofo_enroll">' . $this->checkbox_label . '<input type="checkbox" id="filosofo_enroll" name="filosofo_enroll"' . $checker . ' /></label>' ;
+		
+		if ( get_settings('users_can_register') && !$this->check_status($post_ID) && !isset( $user_ID ) ) : 
+			$notice .= sprintf($this->no_comment_subscribe, get_settings('siteurl') . '/wp-register.php');
+		elseif ( $user_ID && !$this->check_status($post_ID) ) : 
+			$notice .= sprintf($this->no_comment_subscribe, get_settings('siteurl') . '/wp-admin/profile.php?page=' . 
+			basename(__FILE__) . '&amp;filosofo_ec_user_id=' . $user_ID . '&amp;check=' . $this->encode_user_id($user_ID) . 
+			'&amp;post_to_enroll=' . $post_ID . '&amp;filosofo_ec_subscribe=subscribe');
+		endif;
+
 		echo $notice;
 	} 
 
@@ -183,6 +194,7 @@ $this->default_role = 'subscriber';
 		$message = sprintf(__('A new comment has been posted to %s: %s '), $title, get_permalink($comment_post_ID)) . "\r\n";
 		$message .= sprintf(__('Author: %s'), $comment_data['comment_author']) . "\r\n";
 		$message .= sprintf(__('Message: %s'), $comment_data['comment_content']) . "\r\n";
+		$message .= sprintf(__('Web Site: %s'), $comment_data['comment_author_url']) . "\r\n";
 		$message .= "\r\n ------------------- \r\n";
 		$message .= "\r\n" . sprintf(__('Manage your subscriptions by logging in here: %s'), get_settings('siteurl') . "/wp-login.php") . "\r\n"; 
 		foreach ($enrollees as $user_id) {
