@@ -3,7 +3,7 @@
 Plugin Name: Filosofo Enroll Comments
 Plugin URI: http://www.ilfilosofo.com/blog/enroll-comments/
 Description: Filosofo Enroll Comments lets users sign up to receive emails when new comments appear.    
-Version: 0.53
+Version: 0.54
 Author: Austin Matzko
 Author URI: http://www.ilfilosofo.com/blog/
 */
@@ -32,9 +32,9 @@ function filosofo_ec() {
 //*************************************************************************************************
 
 /* 	The messages that appear in the comments area, if appropriate */
-$this->checkbox_label = __('Receive an email if someone else comments on this post?');
-$this->manage_label = __('Manage <a href="%s">your subscriptions</a>.');
-$this->no_comment_subscribe = __('<p><a href="%s">Subscribe</a> without commenting.</p>');
+$this->checkbox_label = '<p><label for="filosofo_enroll">Receive an email if someone else comments on this post?%s</label></p>';
+$this->manage_label = '<p>Manage <a href="%s">your subscriptions</a>.</p>';
+$this->no_comment_subscribe = '<p><a href="%s">Subscribe</a> without commenting.</p>';
 
 /* 	The capability a user needs to be able to edit others' enrollments */
 $this->min_role = 'edit_others_posts';
@@ -56,8 +56,8 @@ $this->default_role = 'subscriber';
 
 	function add_enroll_checkbox($post_ID) {
 		global $user_ID;
-		$notice = ($this->check_status($post_ID)) ? '<p>' . sprintf($this->manage_label, get_settings('siteurl') . '/wp-admin/profile.php?page=' . basename(__FILE__)) . '</p>' 
-		: '<label for="filosofo_enroll">' . $this->checkbox_label . '<input type="checkbox" id="filosofo_enroll" name="filosofo_enroll"' . $checker . ' /></label>' ;
+		$notice = ($this->check_status($post_ID)) ? sprintf($this->manage_label, get_settings('siteurl') . '/wp-admin/profile.php?page=' . basename(__FILE__)) 
+		: sprintf($this->checkbox_label, '<input type="checkbox" id="filosofo_enroll" name="filosofo_enroll" />');
 		
 		if ( get_settings('users_can_register') && !$this->check_status($post_ID) && !isset( $user_ID ) ) : 
 			$notice .= sprintf($this->no_comment_subscribe, get_settings('siteurl') . '/wp-register.php');
