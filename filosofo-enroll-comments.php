@@ -3,7 +3,7 @@
 Plugin Name: Filosofo Enroll Comments
 Plugin URI: http://www.ilfilosofo.com/blog/enroll-comments/
 Description: Filosofo Enroll Comments lets users sign up to receive emails when new comments appear.    
-Version: 0.54
+Version: 0.55
 Author: Austin Matzko
 Author URI: http://www.ilfilosofo.com/blog/
 */
@@ -187,6 +187,7 @@ $this->default_role = 'subscriber';
 	} // end function notify_new_enrollee
 
 	function email_enrollees($comment_ID) {
+		if (wp_get_comment_status($comment_ID) != 'approved') return;
 		$comment_data = get_commentdata($comment_ID,1);
                 $comment_post_ID = $comment_data['comment_post_ID'];
 		$title = '"' . get_the_title($comment_post_ID) . '"';		
