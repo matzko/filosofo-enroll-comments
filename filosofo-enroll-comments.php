@@ -3,7 +3,7 @@
 Plugin Name: Filosofo Enroll Comments
 Plugin URI: http://www.ilfilosofo.com/blog/enroll-comments/
 Description: Filosofo Enroll Comments lets users sign up to receive emails when new comments appear.    
-Version: 0.55
+Version: 0.56
 Author: Austin Matzko
 Author URI: http://www.ilfilosofo.com/blog/
 */
@@ -194,8 +194,8 @@ $this->default_role = 'subscriber';
 		$enrollees = $this->get_post_enrollees($comment_post_ID);
 		$message = sprintf(__('A new comment has been posted to %s: %s '), $title, get_permalink($comment_post_ID)) . "\r\n";
 		$message .= sprintf(__('Author: %s'), $comment_data['comment_author']) . "\r\n";
-		$message .= sprintf(__('Message: %s'), $comment_data['comment_content']) . "\r\n";
 		$message .= sprintf(__('Web Site: %s'), $comment_data['comment_author_url']) . "\r\n";
+		$message .= sprintf(__('Message: %s'), $comment_data['comment_content']) . "\r\n";
 		$message .= "\r\n ------------------- \r\n";
 		$message .= "\r\n" . sprintf(__('Manage your subscriptions by logging in here: %s'), get_settings('siteurl') . "/wp-login.php") . "\r\n"; 
 		foreach ($enrollees as $user_id) {
