@@ -3,12 +3,12 @@
 Plugin Name: Filosofo Enroll Comments
 Plugin URI: http://www.ilfilosofo.com/blog/enroll-comments/
 Description: Filosofo Enroll Comments lets users sign up to receive emails when new comments appear.    
-Version: 0.56
+Version: 0.57
 Author: Austin Matzko
 Author URI: http://www.ilfilosofo.com/blog/
 */
 
-/*  Copyright 2005  Austin Matzko  (email : if.website at gmail.com)
+/*  Copyright 2006  Austin Matzko  (email : if.website at gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,13 +56,13 @@ $this->default_role = 'subscriber';
 
 	function add_enroll_checkbox($post_ID) {
 		global $user_ID;
-		$notice = ($this->check_status($post_ID)) ? sprintf($this->manage_label, get_settings('siteurl') . '/wp-admin/profile.php?page=' . basename(__FILE__)) 
+		$notice = ($this->check_status($post_ID)) ? sprintf($this->manage_label, get_option('siteurl') . '/wp-admin/profile.php?page=' . basename(__FILE__)) 
 		: sprintf($this->checkbox_label, '<input type="checkbox" id="filosofo_enroll" name="filosofo_enroll" />');
 		
-		if ( get_settings('users_can_register') && !$this->check_status($post_ID) && !isset( $user_ID ) ) : 
-			$notice .= sprintf($this->no_comment_subscribe, get_settings('siteurl') . '/wp-register.php');
+		if ( get_option('users_can_register') && !$this->check_status($post_ID) && !isset( $user_ID ) ) : 
+			$notice .= sprintf($this->no_comment_subscribe, get_option('siteurl') . '/wp-register.php');
 		elseif ( $user_ID && !$this->check_status($post_ID) ) : 
-			$notice .= sprintf($this->no_comment_subscribe, get_settings('siteurl') . '/wp-admin/profile.php?page=' . 
+			$notice .= sprintf($this->no_comment_subscribe, get_option('siteurl') . '/wp-admin/profile.php?page=' . 
 			basename(__FILE__) . '&amp;filosofo_ec_user_id=' . $user_ID . '&amp;check=' . $this->encode_user_id($user_ID) . 
 			'&amp;post_to_enroll=' . $post_ID . '&amp;filosofo_ec_subscribe=subscribe');
 		endif;
@@ -154,7 +154,11 @@ $this->default_role = 'subscriber';
 	}
 
 	function create_user() { 
-		require_once( ABSPATH . WPINC . '/registration-functions.php');
+		$old_regpath = ABSPATH . WPINC . '/registration-functions.php';
+		$new_regpath = ABSPATH . WPINC . '/registration.php';
+		
+		if ( file_exists( $old_regpath ) ) require_once( ABSPATH . WPINC . '/registration-functions.php');
+		else require_once( $new_regpath );
 		
 		// get email prefix
 		$user_email = strtolower($_POST['email']);
@@ -197,14 +201,14 @@ $this->default_role = 'subscriber';
 		$message .= sprintf(__('Web Site: %s'), $comment_data['comment_author_url']) . "\r\n";
 		$message .= sprintf(__('Message: %s'), $comment_data['comment_content']) . "\r\n";
 		$message .= "\r\n ------------------- \r\n";
-		$message .= "\r\n" . sprintf(__('Manage your subscriptions by logging in here: %s'), get_settings('siteurl') . "/wp-login.php") . "\r\n"; 
+		$message .= "\r\n" . sprintf(__('Manage your subscriptions by logging in here: %s'), get_option('siteurl') . "/wp-login.php") . "\r\n"; 
 		foreach ($enrollees as $user_id) {
 			$message_custom = $message;
 			$message_custom .= $this->user_messages[$user_id];
 			$user = get_userdata($user_id);
-			$unsubscribe_link = get_settings('siteurl') . '/index.php?' . 'filosofo_ec_user_id=' . $user_id . '&check=' . $this->encode_user_id($user_id) . '&filosofo_ec_post_id=' . $comment_post_ID . '&filosofo_ec_subscribe=unsubscribe&email=true';
+			$unsubscribe_link = get_option('siteurl') . '/index.php?' . 'filosofo_ec_user_id=' . $user_id . '&check=' . $this->encode_user_id($user_id) . '&filosofo_ec_post_id=' . $comment_post_ID . '&filosofo_ec_subscribe=unsubscribe&email=true';
 			$message_custom .= "\r\n" . sprintf(__('Unsubscribe From This Entry %s'),$unsubscribe_link) . "\r\n";
-			wp_mail(stripslashes($user->user_email), sprintf(__('[%s] New Comment Posted to %s'), get_settings('blogname'), $title), $message_custom);
+			wp_mail(stripslashes($user->user_email), sprintf(__('[%s] New Comment Posted to %s'), get_option('blogname'), $title), $message_custom);
 		}
 	} //end function email_enrollees
 
@@ -234,7 +238,7 @@ $this->default_role = 'subscriber';
 	function test_for_posts() {
 		global $user_ID;
 		if (isset($_REQUEST['filosofo_ec_subscribe'])) { //request for changes to enrollment
-			if (trim($_REQUEST['check']) != $this->encode_user_id(trim($_REQUEST['filosofo_ec_user_id']))) die(sprintf(__('Your request has expired.  Please <a href="%s">login</a> to manage your subscriptions.'), get_settings('siteurl') . "/wp-login.php"));
+			if (trim($_REQUEST['check']) != $this->encode_user_id(trim($_REQUEST['filosofo_ec_user_id']))) die(sprintf(__('Your request has expired.  Please <a href="%s">login</a> to manage your subscriptions.'), get_option('siteurl') . "/wp-login.php"));
 			switch(trim($_REQUEST['filosofo_ec_subscribe'])) {
 				case 'subscribe':
 					foreach (array('page_to_enroll','post_to_enroll') as $option)
@@ -266,7 +270,7 @@ $this->default_role = 'subscriber';
 		?><script type="text/javascript">
 		//<![CDATA[
 		function ajaxDelete(what, id) {
-			ajaxDel = new sack('<?php echo get_settings('siteurl') . $_SERVER['PHP_SELF']; ?>?page=<?php echo basename(__FILE__); ?>&filosofo_ec_ajax_test=true');
+			ajaxDel = new sack('<?php echo get_option('siteurl') . $_SERVER['PHP_SELF']; ?>?page=<?php echo basename(__FILE__); ?>&filosofo_ec_ajax_test=true');
 			if ( ajaxDel.failed ) return true;
 			ajaxDel.myResponseElement = getResponseElement();
 			ajaxDel.method = 'POST';
